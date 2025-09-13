@@ -1,23 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
+import static java.util.Collections.min;
 
 import android.util.Size;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
@@ -25,13 +16,13 @@ import org.opencv.core.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp
-public class Test extends LinearOpMode
-{
+public class AprilTagDetection {
+
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
     public static double middleOfScreenX = 320;
     public static double middleOfScreenY = 240;
+    public static final double focalLengthMM = 28; //2 8mm focal length, approximately: Logitech c922 pro
 
     /**
      * The variable to store our instance of the AprilTag processor.
@@ -42,66 +33,19 @@ public class Test extends LinearOpMode
      * The variable to store our instance of the vision portal.
      */
     private VisionPortal visionPortal;
-
-    @Override
-    public void runOpMode() throws InterruptedException
+    HardwareMap hardwareMap;
+    Telemetry telemetry;
+    double toMM(double in)
     {
-        getCurrentGameTagLibrary();
-        Point center = new Point();
-        ArrayList<Boolean> colorList = new ArrayList<>();
-        AprilTagDetection aprilTagDetection = new AprilTagDetection(hardwareMap, telemetry);
-        waitForStart();
-        // Declare our motors
-        // Make sure your ID's match your configuration
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
-
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        waitForStart();
-
-        aprilTagDetection.initAprilTag();
-
-        if (isStopRequested()) return;
-
-        while (opModeIsActive())
-        {
-            center = aprilTagDetection.telemetryAprilTag();
-            if(aprilTagDetection.colors.size() != 0 && colorList.size() == 0) colorList = aprilTagDetection.colors;
-            telemetry.addData("Color List", colorList);
-            telemetry.addData("Center", center);
-
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x;
-
-            double frontLeftPower = (y + x + rx);
-            double backLeftPower = (y - x + rx);
-            double frontRightPower = (y - x - rx);
-            double backRightPower = (y + x - rx);
-
-            frontLeftMotor.setPower(frontLeftPower);
-            backLeftMotor.setPower(backLeftPower);
-            frontRightMotor.setPower(frontRightPower);
-            backRightMotor.setPower(backRightPower);
-
-            if(center.x > middleOfScreenX - 5) telemetry.addLine("move right");
-            if(center.x < middleOfScreenX + 5) telemetry.addLine("move left");
-
-            if(center.y > middleOfScreenY - 5) telemetry.addLine("move down");
-            if(center.y < middleOfScreenY + 5) telemetry.addLine("move up");
-            
-            telemetry.update();
-        }
+        return in*25.4;
     }
-    /*public void initAprilTag() {
+
+    public AprilTagDetection(HardwareMap hardwareMap, Telemetry telemetry)
+    {
+        this.hardwareMap = hardwareMap;
+        this.telemetry = telemetry;
+    }
+    public void initAprilTag() {
 
         // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder()
@@ -167,43 +111,52 @@ public class Test extends LinearOpMode
     }   // end method initAprilTag()
 
 
-    *//**
+    /**
      * Add telemetry about AprilTag detections.
-     *//*
+     */
     ArrayList<Boolean> colors = new ArrayList<>();
 
     public Point telemetryAprilTag() {
 
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
-        telemetry.addData("color list ", colors.toString());
+        List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = aprilTag.getDetections();
+        //telemetry.addData("# AprilTags Detected", currentDetections.size());
+        //telemetry.addData("color list ", colors.toString());
         Point cent = new Point();
 
         // Step through the list of detections and display info for each one.
-        for (AprilTagDetection detection : currentDetections) {
+        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
 
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, colors.toString()));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                //telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, colors.toString()));
+                //telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                //telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                //telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
             } else {
                 if(detection.id == 21) colors = new ArrayList<Boolean>(){{add(true); add(false); add(false);}};
                 if(detection.id == 22) colors = new ArrayList<Boolean>(){{add(false); add(true); add(false);}};
                 if(detection.id == 23) colors = new ArrayList<Boolean>(){{add(false); add(false); add(true);}};
-                telemetry.addData("Pose x", detection.center);
+                //telemetry.addData("Pose x", detection.center);
                 cent = detection.center;
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                Point[] corners = detection.corners;
+                double width = Math.abs(Math.min(corners[0].x, corners[3].x) - Math.max(corners[1].x, corners[2].x));
+                telemetry.addData("width", width);
+                // distance = (realWorldWidth * focalLength) / perceived width
+                // 1524mm = (4in * focalLength) /
+                double distance = (toMM(4) * focalLengthMM) / width;
+                telemetry.addData("distance?", distance);
+                telemetry.addData("distance in MM?", distance * 31.75);
+                telemetry.addData("distance in in?", (distance * 31.75)/25.4 * (5/3));
+                ///WHAT ARE ARBITRARY UNITSSS KEJRGJH WKHGIOEGHJ OERUIHKJSHRT IUSRHPUIOY5
+                //telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                //telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }   // end for() loop
 
         // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
+        //telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        //telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        //telemetry.addLine("RBE = Range, Bearing & Elevation");
         return cent;
 
-    }   // end method telemetryAprilTag()*/
-
+    }   // end method telemetryAprilTag()
 }
