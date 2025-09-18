@@ -140,7 +140,7 @@ public class AprilTagDetection {
                 Point[] corners = detection.corners;
 
                 double width = Math.abs(Math.min(corners[0].x, corners[3].x) - Math.max(corners[1].x, corners[2].x));
-                
+
                 telemetry.addData("width", width);
                 // distance = (realWorldWidth * focalLength) / perceived width
                 // 1524mm = (4in * focalLength) /
