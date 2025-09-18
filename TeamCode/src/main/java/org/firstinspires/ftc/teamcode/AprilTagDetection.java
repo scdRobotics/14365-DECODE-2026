@@ -144,7 +144,7 @@ public class AprilTagDetection {
                 telemetry.addData("width", width);
                 // distance = (realWorldWidth * focalLength) / perceived width
                 // 1524mm = (4in * focalLength) /
-                double distance = 108000/width;//need change according to data
+                double distance = 108000/width;//need change according to data/
                 telemetry.addData("distance?", distance/25.4);
                 //telemetry.addData()
                 //telemetry.addData("distance in MM?", distance * 31.75);
