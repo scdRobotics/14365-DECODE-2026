@@ -32,6 +32,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -59,6 +60,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
     private DcMotor armMotor = null;
 
+    private Servo armServo = null;
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -69,15 +72,15 @@ public class BasicOpMode_Linear extends LinearOpMode {
         // step (using the FTC Robot Controller app on the phone).
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
-        armMotor = hardwareMap.get(DcMotor.class, "Arm Motor");
-
+        armMotor = hardwareMap.get(DcMotor.class, "arm_motor");
+        armServo = hardwareMap.get(Servo.class, "arm_servo");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         armMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-
+        armServo.setDirection(Servo.Direction.FORWARD);
         // Wait for the game to start (driver presses START)
         waitForStart();
         runtime.reset();
@@ -90,30 +93,43 @@ public class BasicOpMode_Linear extends LinearOpMode {
             double rightPower;
             double armPower;
 
+
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
 
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
             double drive =  gamepad1.left_stick_y;
-            double turn  =  gamepad1.right_stick_x;
+            double turn  =  -gamepad1.right_stick_x;
             boolean controlArmUp = gamepad1.dpad_up;
             boolean controlArmDown = gamepad1.dpad_down;
+            boolean armServoRight = gamepad1.dpad_right;
+            boolean armServoLeft = gamepad1.dpad_left;
 
             leftPower   = Range.clip(drive + turn, -1.0, 1.0) ;
             rightPower  = Range.clip(drive - turn, -1.0, 1.0) ;
-            if (controlArmUp)
-            {
-                armPower = .25;
+            if (controlArmUp) {
+                armPower = .35;
             }
-            else if(controlArmDown)
-            {
+            else if(controlArmDown) {
                 armPower = -.25;
             }
-            else
-            {
+            else {
                 armPower = 0;
             }
+
+            if (armServoRight) {
+                armServo.setPosition(armServo.getPosition() + 10);
+            }
+            else if (armServoLeft) {
+                armServo.setPosition(armServo.getPosition() - 10);
+            }
+
+            if (gamepad1.a)
+            {
+                armServo.setPosition(0);
+            }
+
 
             // Tank Mode uses one stick to control each wheel.
             // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -128,6 +144,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motors", "left (%.2f), right (%.2f), arm (%.2f)", leftPower, rightPower, armPower);
+            telemetry.addData("Servos", "arm (%.2f)", armServo.getDirection());
             telemetry.update();
         }
     }
