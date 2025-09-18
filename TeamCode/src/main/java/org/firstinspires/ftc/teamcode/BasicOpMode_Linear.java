@@ -106,9 +106,13 @@ public class BasicOpMode_Linear extends LinearOpMode {
             {
                 armPower = .25;
             }
-            else
+            else if(controlArmDown)
             {
                 armPower = -.25;
+            }
+            else
+            {
+                armPower = 0;
             }
 
             // Tank Mode uses one stick to control each wheel.
