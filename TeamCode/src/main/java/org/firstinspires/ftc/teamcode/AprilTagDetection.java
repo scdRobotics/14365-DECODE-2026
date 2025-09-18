@@ -22,7 +22,7 @@ public class AprilTagDetection {
 
     public static double middleOfScreenX = 320;
     public static double middleOfScreenY = 240;
-    public static final double focalLengthMM = 28; //2 8mm focal length, approximately: Logitech c922 pro
+    public static final double focalLengthMM = 2.8; //600.075; //2.8mm focal length approximately: Logitech c922 pro
 
     /**
      * The variable to store our instance of the AprilTag processor.
@@ -138,14 +138,17 @@ public class AprilTagDetection {
                 //telemetry.addData("Pose x", detection.center);
                 cent = detection.center;
                 Point[] corners = detection.corners;
+
                 double width = Math.abs(Math.min(corners[0].x, corners[3].x) - Math.max(corners[1].x, corners[2].x));
+
                 telemetry.addData("width", width);
                 // distance = (realWorldWidth * focalLength) / perceived width
                 // 1524mm = (4in * focalLength) /
-                double distance = (toMM(4) * focalLengthMM) / width;
-                telemetry.addData("distance?", distance);
-                telemetry.addData("distance in MM?", distance * 31.75);
-                telemetry.addData("distance in in?", (distance * 31.75)/25.4 * (5/3));
+                double distance = 108000/width;//need change according to data
+                telemetry.addData("distance?", distance/25.4);
+                //telemetry.addData()
+                //telemetry.addData("distance in MM?", distance * 31.75);
+                //telemetry.addData("distance in in?", (distance * 31.75)/25.4 * (5/3));
                 ///WHAT ARE ARBITRARY UNITSSS KEJRGJH WKHGIOEGHJ OERUIHKJSHRT IUSRHPUIOY5
                 //telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 //telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
