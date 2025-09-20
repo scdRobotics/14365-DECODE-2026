@@ -73,14 +73,14 @@ public class BasicOpMode_Linear extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         armMotor = hardwareMap.get(DcMotor.class, "arm_motor");
-        armServo = hardwareMap.get(Servo.class, "arm_servo");
+      //  armServo = hardwareMap.get(Servo.class, "arm_servo");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         armMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        armServo.setDirection(Servo.Direction.REVERSE);
+      //  armServo.setDirection(Servo.Direction.REVERSE);
         // Wait for the game to start (driver presses START)
         waitForStart();
         runtime.reset();
@@ -103,8 +103,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
             double turn  =  -gamepad1.right_stick_x;
             boolean controlArmUp = gamepad1.dpad_up;
             boolean controlArmDown = gamepad1.dpad_down;
-            boolean armServoRight = gamepad1.dpad_right;
-            boolean armServoLeft = gamepad1.dpad_left;
+          //  boolean armServoRight = gamepad1.dpad_right;
+          //  boolean armServoLeft = gamepad1.dpad_left;
 
             leftPower   = Range.clip(drive + turn, -1.0, 1.0) ;
             rightPower  = Range.clip(drive - turn, -1.0, 1.0) ;
@@ -117,7 +117,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             else {
                 armPower = 0;
             }
-
+/*
             if (armServoRight) {
              //   armServo.setDirection(Servo.Direction.FORWARD);
                 armServo.setPosition(armServo.getPosition() + 10);
@@ -131,7 +131,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             {
                 armServo.setPosition(0);
             }
-
+*/
 
             // Tank Mode uses one stick to control each wheel.
             // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -141,12 +141,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
             // Send calculated power to wheels
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
-            armMotor.setPower(armPower);
+      //      armMotor.setPower(armPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motors", "left (%.2f), right (%.2f), arm (%.2f)", leftPower, rightPower, armPower);
-            telemetry.addData("Servos", "arm (%.2f)", armServo.getDirection());
+        //    telemetry.addData("Servos", "arm (%.2f)", armServo.getDirection());
             telemetry.update();
         }
     }
