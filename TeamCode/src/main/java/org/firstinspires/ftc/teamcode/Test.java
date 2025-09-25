@@ -49,7 +49,7 @@ public class Test extends LinearOpMode
         getCurrentGameTagLibrary();
         Point center = new Point();
         ArrayList<Boolean> colorList = new ArrayList<>();
-        AprilTagDetection aprilTagDetection = new AprilTagDetection(hardwareMap, telemetry);
+        //AprilTagDetection aprilTagDetection = new AprilTagDetection(hardwareMap, telemetry);
         waitForStart();
         // Declare our motors
         // Make sure your ID's match your configuration
@@ -67,14 +67,14 @@ public class Test extends LinearOpMode
 
         waitForStart();
 
-        aprilTagDetection.initAprilTag();
+        //aprilTagDetection.initAprilTag();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive())
         {
-            center = aprilTagDetection.telemetryAprilTag();
-            if(aprilTagDetection.colors.size() != 0 && colorList.size() == 0) colorList = aprilTagDetection.colors;
+            //center = aprilTagDetection.telemetryAprilTag();
+            //if(aprilTagDetection.colors.size() != 0 && colorList.size() == 0) colorList = aprilTagDetection.colors;
             telemetry.addData("Color List", colorList);
             telemetry.addData("Center", center);
 
