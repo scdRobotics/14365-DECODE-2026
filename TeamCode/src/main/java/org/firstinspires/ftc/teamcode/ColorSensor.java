@@ -17,9 +17,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class ColorSensor extends BasicOpMode_Linear
 {
     NormalizedColorSensor colorSensor;
-
+    public String ballColor;
+    
     View relativeLayout;
-
     @Override public void runOpMode()
     {
         int relativeLayoutId = hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
@@ -40,7 +40,6 @@ public class ColorSensor extends BasicOpMode_Linear
         //set the value that the raw value will be multiplied by
         float gain = 25;
 
-        String ballColor;
 
         //hue, saturation, value
         final float[] hsvValues = new float[3];
@@ -56,13 +55,13 @@ public class ColorSensor extends BasicOpMode_Linear
             //update the values in the array
             Color.colorToHSV(colors.toColor(), hsvValues);
 
-            if (colors.green > .3 && colors.blue > .2 && colors.red < .2)
-            {
-                ballColor = "Green";
-            }
-            else if (colors.red > .3 && colors.blue > .5 && colors.green < .3)
+            if (hsvValues[0] > 200 && hsvValues[0] < 240)
             {
                 ballColor = "Purple";
+            }
+            else if (hsvValues[0] > 155 && hsvValues[0] < 183)
+            {
+                ballColor = "Green";
             }
             else
             {
