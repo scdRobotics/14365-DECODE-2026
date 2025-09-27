@@ -3,43 +3,50 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp
 public class Physics extends LinearOpMode {
 
-    final double lineLength = 17;
+    final double lineLength = 17; ///what is this meant to be?
+
     double angle = 50;
     double v0 = 100;
 
     double distance = 15; //diagonal length of the field: ~16.9705627485 ft
     final double height = 3.233333; //38.80in
 
-    double v0x = v0 * Math.cos(Math.toRadians(angle));
-    double v0y = v0 * Math.sin(Math.toRadians(angle));
 
     public void runOpMode()
     {
         waitForStart();
 
+        v0 = findGoodVel(angle, distance);
+        boolean justPressed = false;
+
         while (opModeIsActive())
         {
             if(gamepad1.dpad_up)
             {
-                newAngle(angle+1);
-                v0 = 100;
+                newAngle(angle + .001);
+                justPressed = true;
+                telemetry.addData("new angle", angle);
+                telemetry.update();
             }
-            if(gamepad1.dpad_down)
-            {
-                newAngle(angle-1);
-                v0 = 100;
+            else if(gamepad1.dpad_down) {
+                newAngle(angle - .001);
+                justPressed = true;
+                telemetry.addData("new angle", angle);
+                telemetry.update();
             }
-            newVel(findGoodVel(angle, distance));
+            else if(justPressed){
+                v0 = findGoodVel(angle, distance);
+                justPressed = false;
+            }
 
-            telemetry.addData("velocity", v0);
-            telemetry.addData("angle", angle);
-            telemetry.update();
             if (isStopRequested()) return;
         }
     }
@@ -48,20 +55,18 @@ public class Physics extends LinearOpMode {
     {
         double min = Double.MAX_VALUE;
         double vel = v0;
-        double velX = vel * Math.cos(Math.toRadians(angle));
-        double velY = vel * Math.sin(Math.toRadians(angle));
 
         int count = 0;
-        while(min > .5 || min <= 0) {
-            if(min == Double.MAX_VALUE) newVel(1000);
-            else if(min <= 0) newVel(vel + 0.01);
-            else if(min > .5) newVel(vel - 0.01);
-            v0x = vel * Math.cos(Math.toRadians(inAngle));
-            v0y = vel * Math.sin(Math.toRadians(inAngle));
-            min = getSmallestYDistance(getPath());
+        while(min > .25 || min <= 0) {
+            if(min == Double.MAX_VALUE) vel = restrictVel(100);
+            else if(min <= 0) vel = restrictVel(vel + 0.1);
+            else if(min > .25) vel = restrictVel(vel - 0.1);
+            min = getSmallestYDistance(getPath(vel, inAngle), inDistance);
             count++;
-            if(count > 1000) return -100;
+            if(count > 10000) return -100;
         }
+        telemetry.addData("velocity", vel);
+        telemetry.addData("angle", angle);
         telemetry.addData("min", min);
         telemetry.update();
         return vel;
@@ -73,52 +78,67 @@ public class Physics extends LinearOpMode {
         else if(newAngle >= 90) angle = 89.9999999;
         else angle = newAngle;
     }
-    private void newVel(double vel)
+    private void newV0(double vel)
     {
         if(vel <= 0) v0 = 0.000001;
         else if(vel >= 100000) v0 = 1000000;
         else v0 = vel;
     }
+    private double restrictVel(double vel)
+    {
+        if(vel <= 0) vel = 0.000001;
+        else if(vel >= 100000) vel = 1000000;
+        return vel;
+    }
 
-    public List<Point> getPath()
+    public List<Point> getPath(double vel, double inAngle)
     {
         List<Point> points = new ArrayList<Point>();
 
         double x = 0;
         double y = 0;
 
-        for(float t = 0; t < 3; t += 0.02)
+        double velX = vel * Math.cos(Math.toRadians(inAngle));
+        double velY = vel * Math.sin(Math.toRadians(inAngle));
+
+        for(float t = 0; t < 3; t += 0.001)
         {
-            x = v0x * t;
-            y = (v0y * t) - (4.9 * Math.pow(t, 2));
+            x = velX * t;
+            y = (velY * t) - (4.9 * Math.pow(t, 2));
 
             points.add(new Point(x,y));
         }
         return points;
     }
 
-    public double getSmallestYDistance(List<Point> points)
+    public double getSmallestYDistance(List<Point> points, double inDistance)
     {
         boolean above = false;
-        int start;
-        int end;
         ArrayList<Point> nearWall = new ArrayList<Point>();
+
+        if(points.get(points.size() - 1).x - inDistance <= 0){
+            telemetry.addLine("doesn't reach wall");
+            return Double.MAX_VALUE;
+        }
 
         for(int i = 0; i < points.size(); i++)
         {
             Point p = points.get(i);
-            if((-distance + p.x) > -0.5 && !above)
+            if((-inDistance + p.x) > -0.25 && !above)
             {
                 above = true;
                 nearWall.add(p);
             }
-            else if(above && (-distance + p.x) > 0.5)
+            else if(above && (-inDistance + p.x) > 0.25)
             {
                 nearWall.add(p);
                 break;
             }
             if(above) nearWall.add(p);
         }
+        telemetry.addData("near wall", nearWall);
+        telemetry.update();
+
         double min = Double.MAX_VALUE;
         for(Point p : nearWall)
         {
