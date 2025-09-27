@@ -81,6 +81,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
         rightDrive.setDirection(DcMotor.Direction.FORWARD);
         armMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         armServo.setDirection(Servo.Direction.REVERSE);
+        armServo.scaleRange(0, 1);
         // Wait for the game to start (driver presses START)
         waitForStart();
         runtime.reset();
@@ -112,7 +113,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 armPower = .35;
             }
             else if(controlArmDown) {
-                armPower = -.25;
+                armPower = -.35;
             }
             else {
                 armPower = 0;
@@ -123,7 +124,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             }
             else if (armServoLeft) {
                 armServo.setPosition((armServo.getPosition() -  0.05));
-            }          
+            }
 
            // if (gamepad1.a) {
            //     armServo.setPosition(0);
