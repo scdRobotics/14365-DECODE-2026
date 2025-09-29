@@ -14,11 +14,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 @TeleOp(name = "Sensor: Color", group = "Sensor")
-public class ColorSensor extends BasicOpMode_Linear
+public class ColorSensor extends LinearOpMode
 {
     NormalizedColorSensor colorSensor;
-    public String ballColor;
-    
+    public static String ballColor;
+
     View relativeLayout;
     @Override public void runOpMode()
     {

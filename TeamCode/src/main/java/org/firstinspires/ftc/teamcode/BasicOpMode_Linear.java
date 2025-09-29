@@ -62,11 +62,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
     private Servo armServo = null;
 
+    private ColorSensor colorSensor = null;
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
@@ -110,10 +111,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
             leftPower   = Range.clip(drive + turn, -1.0, 1.0) ;
             rightPower  = Range.clip(drive - turn, -1.0, 1.0) ;
             if (controlArmUp) {
-                armPower = .35;
+                armPower = 1;
             }
             else if(controlArmDown) {
-                armPower = -.35;
+                armPower = -1;
             }
             else {
                 armPower = 0;
@@ -143,7 +144,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motors", "left (%.2f), right (%.2f), arm (%.2f)", leftPower, rightPower, armPower);
-          //  telemetry.addData("Servos", "arm (%.2f)", armServo.getDirection());
+            telemetry.addData("BallColor", ColorSensor.ballColor);
             telemetry.update();
         }
     }
