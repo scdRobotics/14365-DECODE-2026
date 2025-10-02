@@ -114,7 +114,7 @@ public class AprilTagDetection {
     /**
      * Add telemetry about AprilTag detections.
      */
-    ArrayList<Boolean> colors = new ArrayList<>();
+    ArrayList<Integer> colors = new ArrayList<>();
 
     public Point telemetryAprilTag() {
 
@@ -132,9 +132,9 @@ public class AprilTagDetection {
                 //telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
                 //telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
             } else {
-                if(detection.id == 21) colors = new ArrayList<Boolean>(){{add(true); add(false); add(false);}};
-                if(detection.id == 22) colors = new ArrayList<Boolean>(){{add(false); add(true); add(false);}};
-                if(detection.id == 23) colors = new ArrayList<Boolean>(){{add(false); add(false); add(true);}};
+                if(detection.id == 21) colors = new ArrayList<Integer>(){{add(2); add(1); add(1);}};
+                if(detection.id == 22) colors = new ArrayList<Integer>(){{add(1); add(2); add(1);}};
+                if(detection.id == 23) colors = new ArrayList<Integer>(){{add(1); add(1); add(2);}};
                 //telemetry.addData("Pose x", detection.center);
                 cent = detection.center;
                 Point[] corners = detection.corners;
@@ -146,12 +146,6 @@ public class AprilTagDetection {
                 // 1524mm = (4in * focalLength) /
                 double distance = 108000/width;//need change according to data/
                 telemetry.addData("distance?", distance/25.4);
-                //telemetry.addData()
-                //telemetry.addData("distance in MM?", distance * 31.75);
-                //telemetry.addData("distance in in?", (distance * 31.75)/25.4 * (5/3));
-                ///WHAT ARE ARBITRARY UNITSSS KEJRGJH WKHGIOEGHJ OERUIHKJSHRT IUSRHPUIOY5
-                //telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                //telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }   // end for() loop
 
