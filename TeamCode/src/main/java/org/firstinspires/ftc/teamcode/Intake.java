@@ -5,7 +5,10 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.opM
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.ArrayList;
 
@@ -24,10 +27,34 @@ public class Intake extends LinearOpMode
 
     int orderLocation;
 
+    private NormalizedColorSensor colorSensor;
+
+    public Intake(HardwareMap hardwareMap, Telemetry telemetry)
+    {
+        this.hardwareMap = hardwareMap;
+        this.telemetry = telemetry;
+
+        order.add(0);
+        order.add(0);
+        order.add(0);
+
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "internalColorSensor");
+
+        balls.add(0);
+        balls.add(0);
+        balls.add(0);
+    }
+    public void init(ArrayList<Integer> goodOrder)
+    {
+        order.set(0, goodOrder.get(0));
+        order.set(1, goodOrder.get(1));
+        order.set(2, goodOrder.get(2));
+    }
 
     @Override
     public void runOpMode()
     {
+        /*
         order.add(2);
         order.add(1);
         order.add(1);
@@ -39,14 +66,11 @@ public class Intake extends LinearOpMode
         boolean lastFrameLeft = false;
         boolean lastFrameRight = false;
         boolean lastFrameRightTrigger = false;
-        boolean lastFrameLeftTrigger = false;
-        boolean lastFrameDown = false;
 
         balls.add(0);
         balls.add(0);
         balls.add(0);
-
-        telemetry.setAutoClear(false);
+        */
 
         while(opModeIsActive())
         {
@@ -54,7 +78,18 @@ public class Intake extends LinearOpMode
             blue = colorSensor.getNormalizedColors().blue;
             green = colorSensor.getNormalizedColors().green;
 
-            if(gamepad1.dpad_right && !lastFrameRight)
+            if(green > red + .001 && green > blue + .001 && green > 0.002)
+            {
+                logBalls();
+                balls.set(0, 2);
+            }
+            if(blue > red + 0.001 && blue > green + 0.001 && blue > 0.002)
+            {
+                logBalls();
+                balls.set(0,1);
+            }
+
+            /*if(gamepad1.dpad_right && !lastFrameRight)
             {
                 rotateCounterClockwise();
             }
@@ -65,43 +100,36 @@ public class Intake extends LinearOpMode
             if(gamepad1.right_trigger != 0 && !lastFrameRightTrigger)
             {
                 telemetry.clear();
-                orderedShoot();
+                orderedShoot(0);
                 logBalls();
                 telemetry.update();
-            }
-            if(gamepad1.left_trigger != 0 && !lastFrameLeftTrigger)
-            {
-                telemetry.clear();
-                shoot(shootingPosition);
-                logBalls();
-                telemetry.update();
-            }
-            if(gamepad1.dpad_down && !lastFrameDown)
-            {
-                incrementOrderLocation();
             }
 
-            if(green > red + .001 && green > blue + .001 && green > 0.002)
-            {
-                telemetry.clear();
-                logBalls();
-                balls.set(0, 2);
-            }
-            if(blue > red + 0.001 && blue > green + 0.001 && blue > 0.002)
-            {
-                telemetry.clear();
-                logBalls();
-                balls.set(0,1);
-            }
             telemetry.update();
 
             lastFrameRight = gamepad1.dpad_right;
             lastFrameLeft = gamepad1.dpad_left;
-            lastFrameRightTrigger = gamepad1.right_trigger != 0;
-            lastFrameLeftTrigger = gamepad1.left_trigger != 0;
-            lastFrameDown = gamepad1.dpad_down;
+            lastFrameRightTrigger = gamepad1.right_trigger != 0;*/
         }
 
+    }
+    public void update()
+    {
+        red = colorSensor.getNormalizedColors().red;
+        blue = colorSensor.getNormalizedColors().blue;
+        green = colorSensor.getNormalizedColors().green;
+
+        if(green > red + .001 && green > blue + .001 && green > 0.002)
+        {
+            balls.set(0, 2);
+        }
+        if(blue > red + 0.001 && blue > green + 0.001 && blue > 0.002)
+        {
+            balls.set(0,1);
+        }
+        if(gamepad1.dpad_left) incrementOrderLocationDown();
+        if(gamepad1.dpad_right) incrementOrderLocationUp();
+        logBalls();
     }
     public boolean isEmpty()
     {
@@ -128,16 +156,24 @@ public class Intake extends LinearOpMode
         return count;
     }
 
-    public void incrementOrderLocation()
+    public void incrementOrderLocationUp()
     {
-        if(orderLocation == 2) orderLocation = 0;
-        else orderLocation++;
-        telemetry.clear();
-        logBalls();
+        orderLocation++;
+        orderLocation %= 3;
+    }
+    public void incrementOrderLocationDown()
+    {
+        orderLocation--;
+        orderLocation = (orderLocation < 0 ? 2: orderLocation);
     }
 
-    public void orderedShoot()
+    public void orderedShoot(double vel)
     {
+        if(vel == -100)
+        {
+            telemetry.addLine("calculations failed :(");
+            return;
+        }
         int purple = purpleCollected();
         int green = greenCollected();
 
@@ -147,27 +183,28 @@ public class Intake extends LinearOpMode
 
             if(balls.get(shootingPosition) == colorToShoot)
             {
-                shoot(shootingPosition);
+                shoot(shootingPosition, vel);
             }
             else if(balls.get((shootingPosition+1)%balls.size()) == colorToShoot)
             {
                 rotateClockwise();
-                shoot(shootingPosition);
+                shoot(shootingPosition, vel);
             }
             else if(balls.get(shootingPosition-1 < 0 ? 2: shootingPosition-1) == colorToShoot)
             {
                 rotateCounterClockwise();
-                shoot(shootingPosition);
+                shoot(shootingPosition, vel);
             }
             else return;
 
-            incrementOrderLocation();
+            incrementOrderLocationUp();
         }
     }
 
-    private void shoot(int shootingPosition)
+    private void shoot(int shootingPosition, double vel)
     {
         telemetry.addData("SHOOOOOOOOOOOOOOOOOOOOOOOT", balls.get(shootingPosition));
+        telemetry.addData("Velocity of shot: ", vel);
         balls.set(shootingPosition, 0);
     }
 
@@ -217,10 +254,9 @@ public class Intake extends LinearOpMode
         telemetry.addLine("\ncorrect order:");
         for(int i = 0; i < order.size(); i++)
         {
-            if(order.get(i) == 1) telemetry.addLine("purple");
-            else telemetry.addLine("green");
-            if(i == orderLocation) telemetry.addLine("/\\");
+            if(order.get(i) == 1) telemetry.addLine("purple" + (i == orderLocation ? " <" : ""));
+            else if(order.get(i) == 2) telemetry.addLine("green" + (i == orderLocation ? " <" : ""));
+            else telemetry.addLine("nothing");
         }
     }
-
 }

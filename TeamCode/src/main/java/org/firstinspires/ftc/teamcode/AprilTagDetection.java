@@ -35,6 +35,7 @@ public class AprilTagDetection {
     private VisionPortal visionPortal;
     HardwareMap hardwareMap;
     Telemetry telemetry;
+    private double distance;
     double toMM(double in)
     {
         return in*25.4;
@@ -44,6 +45,10 @@ public class AprilTagDetection {
     {
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
+    }
+    public double getDistance()
+    {
+        return distance;
     }
     public void initAprilTag() {
 
@@ -61,7 +66,7 @@ public class AprilTagDetection {
                 // == CAMERA CALIBRATION ==
                 // If you do not manually specify calibration parameters, the SDK will attempt
                 // to load a predefined calibration for your camera.
-                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
+                .setLensIntrinsics(642.663, 642.663, 320.852, 229.694)
                 // ... these parameters are fx, fy, cx, cy.
 
                 .build();
@@ -86,7 +91,7 @@ public class AprilTagDetection {
         }
 
         // Choose a camera resolution. Not all cameras support all resolutions.
-        builder.setCameraResolution(new Size(640, 480));
+        builder.setCameraResolution(new Size(1920, 1080));
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
         //builder.enableLiveView(true);
@@ -122,38 +127,40 @@ public class AprilTagDetection {
         //telemetry.addData("# AprilTags Detected", currentDetections.size());
         //telemetry.addData("color list ", colors.toString());
         Point cent = new Point();
+        boolean seenTower = false;
 
         // Step through the list of detections and display info for each one.
         for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, colors.toString()));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
 
-                //telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, colors.toString()));
-                //telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                //telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                //telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-            } else {
-                if(detection.id == 21) colors = new ArrayList<Integer>(){{add(2); add(1); add(1);}};
-                if(detection.id == 22) colors = new ArrayList<Integer>(){{add(1); add(2); add(1);}};
-                if(detection.id == 23) colors = new ArrayList<Integer>(){{add(1); add(1); add(2);}};
-                //telemetry.addData("Pose x", detection.center);
+                if (detection.id == 21) colors = new ArrayList<Integer>() {{
+                    add(2);
+                    add(1);
+                    add(1);
+                }};
+                if (detection.id == 22) colors = new ArrayList<Integer>() {{
+                    add(1);
+                    add(2);
+                    add(1);
+                }};
+                if (detection.id == 23) colors = new ArrayList<Integer>() {{
+                    add(1);
+                    add(1);
+                    add(2);
+                }};
+                if (detection.id == 20 || detection.id == 24) {
+                    distance = detection.ftcPose.range;
+                    seenTower = true;
+                }
                 cent = detection.center;
-                Point[] corners = detection.corners;
-
-                double width = Math.abs(Math.min(corners[0].x, corners[3].x) - Math.max(corners[1].x, corners[2].x));
-
-                telemetry.addData("width", width);
-                // distance = (realWorldWidth * focalLength) / perceived width
-                // 1524mm = (4in * focalLength) /
-                double distance = 108000/width;//need change according to data/
-                telemetry.addData("distance?", distance/25.4);
             }
-        }   // end for() loop
-
-        // Add "key" information to telemetry
-        //telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        //telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        //telemetry.addLine("RBE = Range, Bearing & Elevation");
+        }
+        if(!seenTower) distance = -Double.MAX_VALUE;
         return cent;
 
-    }   // end method telemetryAprilTag()
+    }
 }
